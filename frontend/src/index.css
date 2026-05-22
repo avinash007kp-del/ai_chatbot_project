@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette */
+  --jet-black: #2d3142;
+  --blue-slate: #4f5d75;
+  --silver: #bfc0c0;
+  --white: #ffffff;
+  --coral-glow: #ef8354;
+
+  /* Light Theme (Default) */
+  --bg-primary: var(--white);
+  --bg-secondary: #f4f5f7; /* Very light silver/gray */
+  --text-primary: var(--jet-black);
+  --text-secondary: var(--blue-slate);
+  --accent: var(--coral-glow);
+  --border-color: #e2e8f0;
+  --input-bg: var(--white);
+  --bot-msg-bg: #f4f5f7;
+  --bot-msg-text: var(--jet-black);
+  --user-msg-bg: var(--coral-glow);
+  --user-msg-text: var(--white);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+[data-theme='dark'] {
+  /* Dark Theme */
+  --bg-primary: var(--jet-black);
+  --bg-secondary: #222533; /* Darker than jet-black for depth */
+  --text-primary: var(--white);
+  --text-secondary: var(--silver);
+  --accent: var(--coral-glow);
+  --border-color: var(--blue-slate);
+  --input-bg: #353a4e; /* Slightly lighter jet-black */
+  --bot-msg-bg: var(--blue-slate);
+  --bot-msg-text: var(--white);
+  --user-msg-bg: var(--coral-glow);
+  --user-msg-text: var(--white);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+input, textarea {
+  font-family: inherit;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--silver);
+  border-radius: 4px;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: var(--blue-slate);
+}
