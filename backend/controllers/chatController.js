@@ -1,4 +1,4 @@
-const { sql } = require('@vercel/postgres');
+const Chat = require('../models/Chat');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 let genAI;
@@ -6,15 +6,9 @@ let genAI;
 // Get all chats for history
 exports.getChats = async (req, res) => {
   try {
-    const { rows } = await sql`
-      SELECT id as _id, title, updated_at as "updatedAt"
-      FROM chats
-      WHERE user_id = ${req.user.id}
-      ORDER BY updated_at DESC
-    `;
-    res.json(rows);
+    const chats = await Chat.find({ userId: req.user._id }).sort({ updatedAt: -1 });
+    res.json(chats);
   } catch (err) {
-    console.error('Fetch chats error:', err);
     res.status(500).json({ error: 'Failed to fetch chats' });
   }
 };
@@ -23,13 +17,9 @@ exports.getChats = async (req, res) => {
 exports.createChat = async (req, res) => {
   try {
     const { title } = req.body;
-    const chatTitle = title || 'New Chat';
-    const { rows } = await sql`
-      INSERT INTO chats (user_id, title, messages)
-      VALUES (${req.user.id}, ${chatTitle}, '[]'::jsonb)
-      RETURNING id as _id, title, messages, created_at as "createdAt", updated_at as "updatedAt"
-    `;
-    res.status(201).json(rows[0]);
+    const newChat = new Chat({ title: title || 'New Chat', messages: [], userId: req.user._id });
+    await newChat.save();
+    res.status(201).json(newChat);
   } catch (err) {
     console.error('Create chat error:', err);
     res.status(500).json({ error: 'Failed to create chat' });
@@ -39,15 +29,10 @@ exports.createChat = async (req, res) => {
 // Get a single chat by ID
 exports.getChatById = async (req, res) => {
   try {
-    const { rows } = await sql`
-      SELECT id as _id, title, messages, created_at as "createdAt", updated_at as "updatedAt"
-      FROM chats
-      WHERE id = ${req.params.id} AND user_id = ${req.user.id}
-    `;
-    if (rows.length === 0) return res.status(404).json({ error: 'Chat not found' });
-    res.json(rows[0]);
+    const chat = await Chat.findOne({ _id: req.params.id, userId: req.user._id });
+    if (!chat) return res.status(404).json({ error: 'Chat not found' });
+    res.json(chat);
   } catch (err) {
-    console.error('Fetch chat by id error:', err);
     res.status(500).json({ error: 'Failed to fetch chat' });
   }
 };
@@ -58,30 +43,20 @@ exports.sendMessage = async (req, res) => {
     const { content, attachment } = req.body;
     const chatId = req.params.id;
 
-    const { rows: chatRows } = await sql`
-      SELECT id, title, messages
-      FROM chats
-      WHERE id = ${chatId} AND user_id = ${req.user.id}
-    `;
-    
-    if (chatRows.length === 0) return res.status(404).json({ error: 'Chat not found' });
-    
-    const chat = chatRows[0];
-    let messages = chat.messages || [];
+    const chat = await Chat.findOne({ _id: chatId, userId: req.user._id });
+    if (!chat) return res.status(404).json({ error: 'Chat not found' });
 
     // Add user message to DB (excluding raw base64 data to save DB space)
     const userMessage = { 
       role: 'user', 
       content,
-      attachment: attachment ? { fileName: attachment.fileName, mimeType: attachment.mimeType } : undefined,
-      timestamp: new Date().toISOString()
+      attachment: attachment ? { fileName: attachment.fileName, mimeType: attachment.mimeType } : undefined
     };
-    messages.push(userMessage);
+    chat.messages.push(userMessage);
 
     // Auto-generate title if it's the first message
-    let newTitle = chat.title;
-    if (messages.length === 1) {
-      newTitle = content.length > 30 ? content.substring(0, 30) + '...' : content || (attachment ? attachment.fileName : 'New Chat');
+    if (chat.messages.length === 1) {
+      chat.title = content.length > 30 ? content.substring(0, 30) + '...' : content || (attachment ? attachment.fileName : 'New Chat');
     }
 
     let botResponseContent = '';
@@ -107,7 +82,7 @@ exports.sendMessage = async (req, res) => {
       });
 
       // Gemini expects history without the final current prompt
-      const historyForGemini = messages.slice(0, -1).map((m) => ({
+      const historyForGemini = chat.messages.slice(0, -1).map((m) => ({
         role: m.role === 'bot' ? 'model' : 'user',
         parts: [{ text: m.content }],
       }));
@@ -134,27 +109,18 @@ exports.sendMessage = async (req, res) => {
     }
 
     // Add bot response to DB
-    const botMessage = { 
-      role: 'bot', 
-      content: botResponseContent,
-      timestamp: new Date().toISOString()
-    };
-    messages.push(botMessage);
+    const botMessage = { role: 'bot', content: botResponseContent };
+    chat.messages.push(botMessage);
 
-    // Update the database
-    await sql`
-      UPDATE chats
-      SET title = ${newTitle}, messages = ${JSON.stringify(messages)}::jsonb, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${chatId}
-    `;
+    await chat.save();
 
     res.json({
-      userMessage: messages[messages.length - 2],
-      botMessage: messages[messages.length - 1],
-      chatId: chat.id, // Vercel Postgres ID
+      userMessage: chat.messages[chat.messages.length - 2],
+      botMessage: chat.messages[chat.messages.length - 1],
+      chatId: chat._id,
     });
   } catch (err) {
-    console.error('Send message error:', err);
+    console.error(err);
     res.status(500).json({ error: 'Failed to send message' });
   }
 };
@@ -162,11 +128,9 @@ exports.sendMessage = async (req, res) => {
 // Clear history
 exports.clearHistory = async (req, res) => {
   try {
-    await sql`DELETE FROM chats WHERE user_id = ${req.user.id}`;
+    await Chat.deleteMany({ userId: req.user._id });
     res.json({ message: 'History cleared' });
   } catch (err) {
-    console.error('Clear history error:', err);
     res.status(500).json({ error: 'Failed to clear history' });
   }
 };
-
