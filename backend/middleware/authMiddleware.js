@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { sql } = require('@vercel/postgres');
 
 const protect = async (req, res, next) => {
   let token;
@@ -8,7 +8,8 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-      req.user = await User.findById(decoded.id).select('-password');
+      const { rows } = await sql`SELECT id, email, created_at FROM users WHERE id = ${decoded.id}`;
+      req.user = rows[0];
       next();
     } catch (error) {
       res.status(401).json({ error: 'Not authorized, token failed' });
