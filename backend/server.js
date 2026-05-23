@@ -4,6 +4,11 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Alias DATABASE_URL to POSTGRES_URL for @vercel/postgres compatibility with Neon
+if (!process.env.POSTGRES_URL && process.env.DATABASE_URL) {
+  process.env.POSTGRES_URL = process.env.DATABASE_URL;
+}
+
 const connectDB = require('./config/db');
 const chatRoutes = require('./routes/chatRoutes');
 const authRoutes = require('./routes/authRoutes');
