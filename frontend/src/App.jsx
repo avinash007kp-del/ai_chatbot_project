@@ -8,18 +8,18 @@ import Login from './components/Login';
 import Register from './components/Register';
 import './App.css';
 
-const API_URL = 'http://localhost:5001/api/chats';
+const API_URL = '/api/chats';
 
 function App() {
   const [activeView, setActiveView] = useState('chat');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
-  
+
   // Auth state
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')));
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
-  
+
   const [currentChatId, setCurrentChatId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
@@ -53,7 +53,7 @@ function App() {
   const fetchChats = async () => {
     try {
       const res = await fetch(API_URL, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -73,7 +73,7 @@ function App() {
   const handleSelectChat = async (id) => {
     try {
       const res = await fetch(`${API_URL}/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setCurrentChatId(data._id);
@@ -84,23 +84,28 @@ function App() {
     }
   };
 
-  const handleSendMessage = async (content) => {
-    const newUserMsg = { id: Date.now().toString(), role: 'user', content };
+  const handleSendMessage = async (content, attachment) => {
+    const newUserMsg = { 
+      id: Date.now().toString(), 
+      role: 'user', 
+      content, 
+      attachment: attachment ? { fileName: attachment.fileName } : undefined 
+    };
     setMessages((prev) => [...prev, newUserMsg]);
     setIsProcessing(true);
 
     try {
       let chatIdToUse = currentChatId;
-      
+
       // If no current chat, create one first
       if (!chatIdToUse) {
         const createRes = await fetch(API_URL, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ title: content.substring(0, 30) })
+          body: JSON.stringify({ title: content.substring(0, 30) || (attachment ? attachment.fileName : 'New Chat') }),
         });
         if (!createRes.ok) throw new Error('Failed to create chat');
         const newChat = await createRes.json();
@@ -112,30 +117,32 @@ function App() {
       // Send the message
       const res = await fetch(`${API_URL}/${chatIdToUse}/message`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ content })
+        body: JSON.stringify({ content, attachment }),
       });
       if (!res.ok) {
-         const errData = await res.json();
-         throw new Error(errData.error || 'Failed to send message');
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to send message');
       }
       const data = await res.json();
-      
+
       // Append the bot response securely
       if (data && data.botMessage) {
         setMessages((prev) => [...prev, data.botMessage]);
       } else {
         throw new Error('No bot message received');
       }
-      
+
       fetchChats(); // refresh sidebar in case title changed
-      
     } catch (err) {
       console.error('Error sending message:', err);
-      setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'bot', content: `Error: ${err.message}` }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now().toString(), role: 'bot', content: `Error: ${err.message}` },
+      ]);
     } finally {
       setIsProcessing(false);
     }
@@ -145,7 +152,7 @@ function App() {
     try {
       await fetch(API_URL, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setMessages([]);
       setCurrentChatId(null);
@@ -183,9 +190,9 @@ function App() {
 
   return (
     <div className="layout-container">
-      <Sidebar 
-        isMobileOpen={isMobileSidebarOpen} 
-        toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} 
+      <Sidebar
+        isMobileOpen={isMobileSidebarOpen}
+        toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         isDesktopCollapsed={isDesktopCollapsed}
         toggleDesktopSidebar={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
         activeView={activeView}
@@ -198,15 +205,21 @@ function App() {
       />
 
       <div className="main-content">
-        <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <header
+          className="header"
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        >
           <div className="header-left">
-            <button className="icon-btn mobile-menu-btn" onClick={() => setIsMobileSidebarOpen(true)}>
+            <button
+              className="icon-btn mobile-menu-btn"
+              onClick={() => setIsMobileSidebarOpen(true)}
+            >
               <Menu size={24} />
             </button>
-            
+
             {isDesktopCollapsed && (
-              <button 
-                className="icon-btn desktop-menu-btn" 
+              <button
+                className="icon-btn desktop-menu-btn"
                 onClick={() => setIsDesktopCollapsed(false)}
                 title="Open sidebar"
               >
@@ -219,8 +232,17 @@ function App() {
               AI Chatbot
             </h1>
           </div>
-          <div className="header-right" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>
-            {currentTime.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          <div
+            className="header-right"
+            style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}
+          >
+            {currentTime.toLocaleString(undefined, {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </div>
         </header>
 
@@ -232,9 +254,7 @@ function App() {
                   <h2>How can I help you today?</h2>
                 </div>
               ) : (
-                messages.map((msg, idx) => (
-                  <ChatMessage key={msg._id || idx} message={msg} />
-                ))
+                messages.map((msg, idx) => <ChatMessage key={msg._id || idx} message={msg} />)
               )}
               {isProcessing && (
                 <div className="chat-message-wrapper bot">

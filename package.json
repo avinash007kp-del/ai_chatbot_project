@@ -1,0 +1,26 @@
+{
+  "name": "ai-chatbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write .",
+    "check-format": "prettier --check ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avinash007kp-del/ai_chatbot_project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/avinash007kp-del/ai_chatbot_project/issues"
+  },
+  "homepage": "https://github.com/avinash007kp-del/ai_chatbot_project#readme",
+  "devDependencies": {
+    "prettier": "^3.5.1"
+  }
+}

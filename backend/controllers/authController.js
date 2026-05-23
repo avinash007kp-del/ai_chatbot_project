@@ -18,7 +18,12 @@ exports.register = async (req, res) => {
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     if (!hasUpperCase || !hasNumber || !hasSpecialChar) {
-      return res.status(400).json({ error: 'Password must contain at least one uppercase letter, one number, and one special character.' });
+      return res
+        .status(400)
+        .json({
+          error:
+            'Password must contain at least one uppercase letter, one number, and one special character.',
+        });
     }
 
     const userExists = await User.findOne({ email });

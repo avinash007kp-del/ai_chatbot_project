@@ -17,7 +17,10 @@
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+  transition:
+    width 0.3s ease,
+    transform 0.3s ease,
+    background-color 0.3s ease;
   z-index: 20;
 }
 
@@ -250,10 +253,13 @@
   .sidebar.mobile-open {
     transform: translateX(0);
   }
-  .mobile-close, .sidebar-overlay, .mobile-menu-btn {
+  .mobile-close,
+  .sidebar-overlay,
+  .mobile-menu-btn {
     display: flex;
   }
-  .desktop-close, .desktop-menu-btn {
+  .desktop-close,
+  .desktop-menu-btn {
     display: none !important;
   }
 }
@@ -499,7 +505,9 @@
   border-radius: 2rem;
   padding: 0.5rem 0.5rem 0.5rem 1.25rem;
   box-shadow: var(--shadow-sm);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .input-form:focus-within {
@@ -530,7 +538,9 @@
   border-radius: 50%;
   width: 2.5rem;
   height: 2.5rem;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .send-btn:hover {
@@ -569,9 +579,12 @@
 }
 
 @keyframes bounce {
-  0%, 80%, 100% { 
+  0%,
+  80%,
+  100% {
     transform: scale(0);
-  } 40% { 
+  }
+  40% {
     transform: scale(1);
   }
 }
@@ -590,7 +603,7 @@
   background-color: var(--bg-secondary);
   padding: 3rem;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
   display: flex;
@@ -742,12 +755,15 @@
   margin-bottom: 0;
 }
 
-.markdown-body ul, .markdown-body ol {
+.markdown-body ul,
+.markdown-body ol {
   margin-left: 1.5rem;
   margin-bottom: 0.8rem;
 }
 
-.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
 }
@@ -768,4 +784,15 @@
   background-color: transparent;
   padding: 0;
   border-radius: 0;
+}
+
+.icon-btn.recording {
+  animation: pulse-red 1.5s infinite;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }

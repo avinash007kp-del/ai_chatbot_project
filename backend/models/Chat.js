@@ -10,10 +10,14 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  attachment: {
+    fileName: String,
+    mimeType: String
+  },
   timestamp: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
 const chatSchema = new mongoose.Schema({
@@ -34,11 +38,11 @@ const chatSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
-  }
+  },
 });
 
 // Update the updatedAt timestamp before saving
-chatSchema.pre('save', function() {
+chatSchema.pre('save', function () {
   this.updatedAt = Date.now();
 });
 
